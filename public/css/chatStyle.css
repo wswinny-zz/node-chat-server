@@ -1,0 +1,85 @@
+* 
+{ 
+	margin: 0;
+	padding: 0; 
+	box-sizing: border-box;
+}
+
+body 
+{ 
+	font: 13px "Courier New";
+
+	background: #262626;
+}
+
+form 
+{ 
+	position: fixed;
+	bottom: 3px;
+
+	width: 100%;
+	
+	padding: 3px;
+	
+	background: #262626;
+}
+
+textarea:focus, 
+input:focus
+{
+    outline: none;
+}
+
+#messageInput
+{
+	width: 85%;
+	height: 35px;
+
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;  
+
+	padding: 3px;
+	padding-left: 10px;
+	padding-right: 10px;
+
+	background: none;
+
+	font: 13px "Courier New";
+	color: white;
+}
+
+#sendMessage 
+{ 
+	width: 10%;
+	height: 35px;
+
+	background: none; 
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;
+
+	padding: 3px;
+
+	font: 13px "Courier New";
+	color: white;
+}
+
+#messages 
+{ 
+	list-style-type: none; 
+	
+	margin: 0;
+
+	padding-bottom: 45px;
+}
+
+#messages li 
+{ 
+	min-height: 30px;
+
+	padding: 5px 10px;
+	margin: 5px;
+
+	border-radius: 10px;
+
+	line-height: 20px;
+}
