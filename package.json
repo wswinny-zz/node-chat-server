@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A role playing chat application",
   "dependencies": {
+    "dateformat": "^1.0.12",
     "express": "4.10.2",
     "file-system": "^2.2.1",
     "path": "^0.12.7",

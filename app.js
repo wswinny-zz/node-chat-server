@@ -7,6 +7,12 @@ var io = require('socket.io')(http);
 var path = require('path');
 var randomcolor = require('randomcolor');
 var fs = require('fs');
+var dateFormat = require('dateformat');
+
+function out(message)
+{
+	console.log(dateFormat(new Date(), "isoDateTime") + ': ' + message);
+}
 
 //set static path so css and images can be used
 app.use(express.static(path.join(__dirname, 'public')));
@@ -26,7 +32,7 @@ io.on('connection', function(socket)
 
 	socket.join('default'); //join the default chat room automaticlly
 
-	console.log('New client ' + client.address + ' connected.');
+	out('New client ' + client.address + ' connected.');
 
 	fs.readdirSync('public/rooms/').forEach(
 		function(room)
@@ -43,7 +49,7 @@ io.on('connection', function(socket)
 	//when a client dissconnects from the server
 	socket.on('disconnect', function()
 	{
-		console.log('Client ' + client.address + ' disconnected.');
+		out('Client ' + client.address + ' disconnected.');
 	});
 
 	//when a chat message is received from the client
@@ -81,11 +87,11 @@ io.on('connection', function(socket)
 
 		io.sockets.connected[socket.id].emit('room update', room);
 
-		console.log("A new room with the name '" + room + "' was added");
+		out("A new room with the name '" + room + "' was added");
 	});
 });
 
 http.listen(3000, function()
 {
-	console.log('listening on *:3000');
+	out('listening on *:3000');
 });
