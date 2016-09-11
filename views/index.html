@@ -6,11 +6,21 @@
 	</head>
 	<body>
 		
-		<ul id='chatrooms'></ul>
+		<div id='maincontent'>
+			<div id='roomspanel'>
+				<form align='center' id='roomForm' action=''>
+					<input id='roomName' autocomplete='off' value='' maxlength='20' />
+					<input id='addRoom' type='submit' value='Add'/>
+				</form>
+				<div id='chatrooms'>
+				</div>
+			</div>
 
-		<ul id='messages'></ul>
-		
+			<ul id='messages'></ul>
+		</div>
+
 		<form align='center' id='messageForm' action=''>
+			<input id='nameInput' autocomplete='off' value='A girl has no name'/>
 			<input id='messageInput' autocomplete='off' />
 			<input id='sendMessage' type='submit' value='Send Message'/>
 		</form>
@@ -21,15 +31,37 @@
 		<script>
 			var socket = io();
 
-			socket.on('init', function(params)
+			socket.on('init', function(initParams)
 			{
-				console.log(params);
+
 			});
 
-			$('form').submit(function()
+			socket.on('disconnect', function () 
 			{
-				socket.emit('chat message', $('#messageInput').val());
+				$('#messages').empty();
+				$('#chatrooms').empty();
+			});
+
+			$('#messageForm').submit(function()
+			{
+				var nameString = '<name>( ' + $('#nameInput').val() + ' ):</name>  ';
+				var msgString = $('#messageInput').val();
+
+				socket.emit('chat message', nameString + msgString);
 				$('#messageInput').val('');
+				
+				return false;
+			});
+
+			$('#roomForm').submit(function()
+			{
+				var roomName = $('#roomName').val().split(' ').join('_');
+
+				if(roomName == '')
+					return false;
+
+				socket.emit('new room', roomName);
+				$('#roomName').val('');
 				
 				return false;
 			});
@@ -38,6 +70,18 @@
 			{
 				$('#messages').append(msg);
 				$('#messages').scrollTop($('#messages')[0].scrollHeight);
+			});
+
+			socket.on('room update', function(room)
+			{
+				var roomIdThxAlex = room.replace(/([.*+?^$|(){}\[\]'"])/mg, "");
+
+				$('#chatrooms').append("<button class='roomButton' id='" + roomIdThxAlex + "'>" + room + "</li>");
+
+				$('#' + roomIdThxAlex).click(function()
+				{
+					socket.emit('change room', $(this).text());
+				});
 			});
 
 			socket.on('clear chat', function(data)

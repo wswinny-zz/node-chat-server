@@ -6,6 +6,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var path = require('path');
 var randomcolor = require('randomcolor');
+var fs = require('fs');
 
 //set static path so css and images can be used
 app.use(express.static(path.join(__dirname, 'public')));
@@ -19,14 +20,30 @@ app.get('/', function(req, res)
 //when a client calles io()
 io.on('connection', function(socket)
 {
-	console.log('New client ' + client.address + ' connected.');
+	var client = new Object();
+	client.address = socket.request.connection.remoteAddress;
+	client.room = 'default';
 
 	socket.join('default'); //join the default chat room automaticlly
+
+	console.log('New client ' + client.address + ' connected.');
+
+	fs.readdirSync('public/rooms/').forEach(
+		function(room)
+		{
+			io.sockets.connected[socket.id].emit('room update', room);
+		});
+
+	fs.readFileSync('public/rooms/default', 'utf8').split('\n').forEach(
+		function(msg)
+		{
+			io.sockets.connected[socket.id].emit('chat message', msg);
+		});
 
 	//when a client dissconnects from the server
 	socket.on('disconnect', function()
 	{
-		
+		console.log('Client ' + client.address + ' disconnected.');
 	});
 
 	//when a chat message is received from the client
@@ -35,24 +52,37 @@ io.on('connection', function(socket)
 		var color = randomcolor.randomColor({luminosity: 'light',count: 1});
 		var newMessage = "<li style='color:" + color + ";'>" + msg + "</li>";
 
-		io.emit('chat message', newMessage);
+		fs.appendFileSync('public/rooms/' + client.room, newMessage + '\n');
+
+		io.to(client.room).emit('chat message', newMessage);
 	});
 
 	socket.on('change room', function(room)
 	{
 		socket.emit('clear chat', {}); //sends the clear chat event to the client
-		
-		console.log(socket.rooms);
 
-		//joins and leaves a room
-		socket.leave();
+		client.room = room;
+
+		socket.leave(client.room);
+
+		fs.readFileSync('public/rooms/' + room, 'utf8').split('\n').forEach(
+			function(msg)
+			{
+				io.sockets.connected[socket.id].emit('chat message', msg);
+			});
+
 		socket.join(room);
-
-		//allows you to send a message to a certian room
-		io.to('some room').emit('message');
 	});
 
-	
+	socket.on('new room', function(room)
+	{
+		var color = randomcolor.randomColor({luminosity: 'light',count: 1});
+		fs.appendFileSync('public/rooms/' + room, "<li style='color:" + color + ";'>Welcome to the " + room + " room</li>\n");
+
+		io.sockets.connected[socket.id].emit('room update', room);
+
+		console.log("A new room with the name '" + room + "' was added");
+	});
 });
 
 http.listen(3000, function()
