@@ -67,8 +67,6 @@ io.on('connection', function(socket)
 	client.address = socket.request.connection.remoteAddress;
 	client.room = 'default';
 
-	socket.join('default'); //join the default chat room automaticlly
-
 	out('New client ' + client.address + ' connected.');
 
 	fs.readdirSync('public/rooms/').forEach(
@@ -108,9 +106,9 @@ io.on('connection', function(socket)
 	{
 		socket.emit('clear chat', {}); //sends the clear chat event to the client
 
-		client.room = room;
-
 		socket.leave(client.room);
+
+		client.room = room;
 
 		fs.readFileSync('public/rooms/' + room, 'utf8').split('\n').forEach(
 			function(msg)
@@ -118,7 +116,7 @@ io.on('connection', function(socket)
 				io.sockets.connected[socket.id].emit('chat message', msg);
 			});
 
-		socket.join(room);
+		socket.join(client.room);
 	});
 
 	socket.on('new room', function(room)

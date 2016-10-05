@@ -35,10 +35,9 @@
 		<script>
 			var socket = io();
 
-			socket.on('init', function()
+			socket.on('init', function(data)
 			{
-				$("#chatrooms").val("default");
-				$("#chatrooms").change();
+				$("#chatrooms").val("default").trigger('change');
 			});
 
 			socket.on('disconnect', function ()
@@ -49,6 +48,8 @@
 			
 			socket.on('chat message', function(msg)
 			{
+				console.log("Got a chat");
+
 				$('#messages').append(msg);
 				$('#messagesContainer').scrollTop($('#messages')[0].scrollHeight);
 			});
@@ -65,10 +66,9 @@
 
 			$('#chatrooms').change(function()
 			{
-				console.log("FIRE!");
-
 				$( "#chatrooms option:selected" ).each(function()
 				{
+					console.log("changing to room: " + $(this).text())
 					socket.emit('change room', $(this).text());
 			    });				
 			});
