@@ -28,9 +28,9 @@ io.on('connection', function(socket)
 {
 	var client = new Object();
 	client.address = socket.request.connection.remoteAddress;
-	client.room = 'default';
+	client.room = '_default_';
 
-	socket.join('default'); //join the default chat room automaticlly
+	socket.join('_default_'); //join the default chat room automaticlly
 
 	out('New client ' + client.address + ' connected.');
 
@@ -40,7 +40,9 @@ io.on('connection', function(socket)
 			io.sockets.connected[socket.id].emit('room update', room);
 		});
 
-	fs.readFileSync('public/rooms/default', 'utf8').split('\n').forEach(
+	//io.sockets.connected[socket.id].emit('room update', fs.readdirSync('public/rooms/'));
+
+	fs.readFileSync('public/rooms/_default_', 'utf8').split('\n').forEach(
 		function(msg)
 		{
 			io.sockets.connected[socket.id].emit('chat message', msg);

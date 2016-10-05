@@ -3,32 +3,32 @@
 	<head>
 		<title>Socket.IO chat</title>
 		<link rel='stylesheet' href='css/chatStyle.css'>
+
+		<script src='https://cdn.socket.io/socket.io-1.2.0.js'></script>
+		<script src='http://code.jquery.com/jquery-1.11.1.js'></script>
 	</head>
 	<body>
-		
-		<div id='maincontent'>
-			<h1 id='pageTitle'>RP Chat</h1>
 
-			<div id='roomspanel'>
+		<div id='maincontent'>
+
+			<div id='roomsDiv'>
 				<form align='center' id='roomForm' action=''>
-					<input id='roomName' autocomplete='off' value='' maxlength='20' />
-					<input id='addRoom' type='submit' value='Add'/>
+					<input id='roomName' autocomplete='off' value='' maxlength='20' placeholder='Must be alphanumeric with no spaces' pattern='^[\w]+$' title='Alphanumeric Only'/>
+					<input id='addRoom' type='submit' value='Add Room'/>
+					<br/>
+					<select id='chatrooms'></select>
 				</form>
-				<div id='chatrooms'>
-				</div>
 			</div>
 
 			<ul id='messages'></ul>
-		</div>
 
-		<form align='center' id='messageForm' action=''>
-			<input id='nameInput' autocomplete='off' value='A girl has no name'/>
-			<input id='messageInput' autocomplete='off' />
-			<input id='sendMessage' type='submit' value='Send Message'/>
-		</form>
-		
-		<script src='https://cdn.socket.io/socket.io-1.2.0.js'></script>
-		<script src='http://code.jquery.com/jquery-1.11.1.js'></script>
+			<form align='center' id='messageForm' action=''>
+				<input id='messageInput' autocomplete='off' />
+				<input id='nameInput' autocomplete='off' value='A girl has no name'/>
+				<input id='characterNameInput' autocomplete='off' value='Character Name (Waif)'/>
+				<input id='sendMessage' type='submit' value='Send Message'/>
+			</form>
+		</div>
 		
 		<script>
 			var socket = io();
@@ -38,18 +38,30 @@
 
 			});
 
-			socket.on('disconnect', function () 
+			socket.on('disconnect', function ()
 			{
 				$('#messages').empty();
 				$('#chatrooms').empty();
 			});
 
+			$('#chatrooms').change(function()
+			{
+				$( "#chatrooms option:selected" ).each(function()
+				{
+					socket.emit('change room', $(this).text());
+			    });				
+			});
+
 			$('#messageForm').submit(function()
 			{
+				var characterNameString = '<name>' + $('#characterNameInput').val() + '</name> ';
 				var nameString = '<name>( ' + $('#nameInput').val() + ' ):</name>  ';
 				var msgString = $('#messageInput').val();
 
-				socket.emit('chat message', nameString + msgString);
+				if(msgString == '')
+					return false;
+
+				socket.emit('chat message', characterNameString + nameString + msgString);
 				$('#messageInput').val('');
 				
 				return false;
@@ -76,21 +88,13 @@
 
 			socket.on('room update', function(room)
 			{
-				var roomIdThxAlex = room.replace(/([.*+?^$|(){}\[\]'"])/mg, "");
-
-				$('#chatrooms').append("<button class='roomButton' id='" + roomIdThxAlex + "'>" + room + "</li>");
-
-				$('#' + roomIdThxAlex).click(function()
-				{
-					socket.emit('change room', $(this).text());
-				});
+				$('#chatrooms').append("<option id='" + room + "'>" + room + "</option>");
 			});
 
 			socket.on('clear chat', function(data)
 			{
 				$('#messages').empty();
 			});
-
 		</script>
 	</body>
 </html>
