@@ -9,9 +9,46 @@ var randomcolor = require('randomcolor');
 var fs = require('fs');
 var dateFormat = require('dateformat');
 
+String.prototype.replaceAll = function(search, replacement)
+{
+    return this.replace(new RegExp(search, 'g'), replacement);
+};
+
 function out(message)
 {
 	console.log(dateFormat(new Date(), "isoDateTime") + ': ' + message);
+}
+
+function parseForImage(text)
+{
+	var message = text;
+
+	var fileExtRegex = /[^\\]*\.(\w+)$/;
+	var pageLinkRegex = /http[s]{0,1}:\/\/[^\s]*\.[a-zA-Z]+/g;
+	var linksInPage = message.match(pageLinkRegex);
+
+	if(linksInPage == null)
+		return message;
+
+	linksInPage.forEach(function(entry)
+	{
+		var fileParts = entry.match(fileExtRegex);
+		var fileExt = '';
+
+		if(fileParts != null && fileParts.length == 2)
+			fileExt = fileParts[1];
+
+		if(fileExt != undefined 	&& 
+			fileExt != '' 			&& 
+			fileExt != '.html'  	&& 
+			fileExt != '.php' 		&& 
+			fileExt != '.asp')
+		{
+			message = message.replaceAll(entry, "<img src='" + entry + "'/>");
+		}
+	});
+
+	return message;
 }
 
 //set static path so css and images can be used
@@ -28,9 +65,9 @@ io.on('connection', function(socket)
 {
 	var client = new Object();
 	client.address = socket.request.connection.remoteAddress;
-	client.room = '_default_';
+	client.room = 'default';
 
-	socket.join('_default_'); //join the default chat room automaticlly
+	socket.join('default'); //join the default chat room automaticlly
 
 	out('New client ' + client.address + ' connected.');
 
@@ -40,13 +77,13 @@ io.on('connection', function(socket)
 			io.sockets.connected[socket.id].emit('room update', room);
 		});
 
-	//io.sockets.connected[socket.id].emit('room update', fs.readdirSync('public/rooms/'));
-
-	fs.readFileSync('public/rooms/_default_', 'utf8').split('\n').forEach(
+	fs.readFileSync('public/rooms/default', 'utf8').split('\n').forEach(
 		function(msg)
 		{
 			io.sockets.connected[socket.id].emit('chat message', msg);
 		});
+
+	io.sockets.connected[socket.id].emit('init', {});
 
 	//when a client dissconnects from the server
 	socket.on('disconnect', function()
@@ -58,7 +95,9 @@ io.on('connection', function(socket)
 	socket.on('chat message', function(msg)
 	{
 		var color = randomcolor.randomColor({luminosity: 'light',count: 1});
-		var newMessage = "<li style='color:" + color + ";'>" + msg + "</li>";
+
+		var newMessage = parseForImage(msg);
+		newMessage = "<li style='color:" + color + ";'>" + newMessage + "</li>";
 
 		fs.appendFileSync('public/rooms/' + client.room, newMessage + '\n');
 

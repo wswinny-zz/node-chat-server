@@ -38,6 +38,13 @@ select:focus
     outline: none;
 }
 
+img
+{
+	max-width: 500px;
+	height: auto;
+	display: block;
+}
+
 name
 {
 	font-weight: bold;
@@ -132,16 +139,23 @@ name
  * MESSAGES DISPLAY
  */
 
-#messages
+#messagesContainer
 {
-	min-width: 100%;
+	width: 100%;
 
 	margin: 0 auto;
 	margin-top: 10px;
 
 	flex: 1 1 600px;
 
-	overflow-y: scroll; 
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+#messages
+{
+	width: 100%;
+	height: auto;
 }
 
 #messages li 

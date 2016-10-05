@@ -8,7 +8,6 @@
 		<script src='http://code.jquery.com/jquery-1.11.1.js'></script>
 	</head>
 	<body>
-
 		<div id='maincontent'>
 
 			<div id='roomsDiv'>
@@ -16,11 +15,14 @@
 					<input id='roomName' autocomplete='off' value='' maxlength='20' placeholder='Must be alphanumeric with no spaces' pattern='^[\w]+$' title='Alphanumeric Only'/>
 					<input id='addRoom' type='submit' value='Add Room'/>
 					<br/>
+
 					<select id='chatrooms'></select>
 				</form>
 			</div>
 
-			<ul id='messages'></ul>
+			<div id='messagesContainer'>
+				<ul id='messages'></ul>
+			</div>
 
 			<form align='center' id='messageForm' action=''>
 				<input id='messageInput' autocomplete='off' />
@@ -29,13 +31,14 @@
 				<input id='sendMessage' type='submit' value='Send Message'/>
 			</form>
 		</div>
-		
+
 		<script>
 			var socket = io();
 
-			socket.on('init', function(initParams)
+			socket.on('init', function()
 			{
-
+				$("#chatrooms").val("default");
+				$("#chatrooms").change();
 			});
 
 			socket.on('disconnect', function ()
@@ -43,9 +46,27 @@
 				$('#messages').empty();
 				$('#chatrooms').empty();
 			});
+			
+			socket.on('chat message', function(msg)
+			{
+				$('#messages').append(msg);
+				$('#messagesContainer').scrollTop($('#messages')[0].scrollHeight);
+			});
+
+			socket.on('room update', function(room)
+			{
+				$('#chatrooms').append("<option value='" + room + "'>" + room + "</option>");
+			});
+
+			socket.on('clear chat', function(data)
+			{
+				$('#messages').empty();
+			});
 
 			$('#chatrooms').change(function()
 			{
+				console.log("FIRE!");
+
 				$( "#chatrooms option:selected" ).each(function()
 				{
 					socket.emit('change room', $(this).text());
@@ -78,22 +99,6 @@
 				$('#roomName').val('');
 				
 				return false;
-			});
-			
-			socket.on('chat message', function(msg)
-			{
-				$('#messages').append(msg);
-				$('#messages').scrollTop($('#messages')[0].scrollHeight);
-			});
-
-			socket.on('room update', function(room)
-			{
-				$('#chatrooms').append("<option id='" + room + "'>" + room + "</option>");
-			});
-
-			socket.on('clear chat', function(data)
-			{
-				$('#messages').empty();
 			});
 		</script>
 	</body>
