@@ -75,6 +75,15 @@ io.on('connection', function(socket)
 			io.sockets.connected[socket.id].emit('room update', room);
 		});
 
+	fs.readdirSync('public/characters/').forEach(
+		function(characterJSON)
+		{
+			var characterData = fs.readFileSync('public/characters/' + characterJSON, 'utf8');
+			var character = JSON.parse(characterData);
+
+			io.sockets.connected[socket.id].emit('character update', character);
+		});
+
 	fs.readFileSync('public/rooms/default', 'utf8').split('\n').forEach(
 		function(msg)
 		{
@@ -127,6 +136,30 @@ io.on('connection', function(socket)
 		io.sockets.connected[socket.id].emit('room update', room);
 
 		out("A new room with the name '" + room + "' was added");
+	});
+
+	socket.on('save character', function(character)
+	{
+		var characterJSON = JSON.stringify(character);
+		var filename = 'public/characters/' + character.name + '.json';
+
+
+		if (!fs.existsSync(filename))
+		{
+			console.log('New character created:');
+			io.sockets.emit('character update', character);
+		}
+
+		fs.writeFileSync(filename, characterJSON);
+	});
+
+	socket.on('get character data', function(characterName)
+	{
+		var filename = 'public/characters/' + characterName + '.json';
+		var characterData = fs.readFileSync(filename, 'utf8');
+		var character = JSON.parse(characterData);
+
+		io.sockets.connected[socket.id].emit('receive character data', character);
 	});
 });
 

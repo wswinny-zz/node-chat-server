@@ -8,28 +8,58 @@
 		<script src='http://code.jquery.com/jquery-1.11.1.js'></script>
 	</head>
 	<body>
-		<div id='maincontent'>
+		<div id='centerDiv'>
+			<div id='leftcontent'>
+				<form align='center' id='characterForm' action=''>
+					<select id='editableCharacters' class='characterFormSelect'></select>
 
-			<div id='roomsDiv'>
-				<form align='center' id='roomForm' action=''>
-					<input id='roomName' autocomplete='off' value='' maxlength='20' placeholder='Must be alphanumeric with no spaces' pattern='^[\w]+$' title='Alphanumeric Only'/>
-					<input id='addRoom' type='submit' value='Add Room'/>
-					<br/>
-
-					<select id='chatrooms'></select>
+					<input id='characterName' class='characterFormInput' autocomplete='off' value='' placeholder='Character Name' required>
+					<select id='characterGender' class='characterFormSelect' required>
+						<option value='none' selected disabled>Select Gender</option>
+						<option value='M'>Male</option>
+						<option value='F'>Female</option>
+						<option value='T'>Trans</option>
+						<option value='none'>Genderless</option>
+					</select>
+					<select id='characterSexualRole' class='characterFormSelect' required>
+						<option value='none' selected disabled>Select Sexual Role</option>
+						<option value='sub'>Submissive</option>
+						<option value='dom'>Dominate</option>
+						<option value='master'>Master</option>
+						<option value='slave'>Slave</option>
+						<option value='brat'>Brat</option>
+						<option value='none'>N/A</option>
+					</select>
+					<textarea id='characterAppearance' class='characterFormTextarea' rows='6' placeholder='Character Appearance' required></textarea>
+					<textarea id='characterPersonality' class='characterFormTextarea' rows='6' placeholder='Character Personality' required></textarea>
+					<textarea id='characterExtraInfo' class='characterFormTextarea' rows='4' placeholder='Extra Information'></textarea>
+					<input id='saveCharacter' class='characterFormInput' type='submit' value='Save Character'/>
+					<button id='clearCharacter' class='characterFormInput'>Clear Character</button>
 				</form>
 			</div>
 
-			<div id='messagesContainer'>
-				<ul id='messages'></ul>
-			</div>
+			<div id='maincontent'>
+				<div id='roomsDiv'>
+					<form align='center' id='roomForm' action=''>
+						<input id='roomName' autocomplete='off' value='' maxlength='20' placeholder='Must be alphanumeric with no spaces' pattern='^[\w]+$' title='Alphanumeric Only'/>
+						<input id='addRoom' type='submit' value='Add Room'/>
+						<br/>
 
-			<form align='center' id='messageForm' action=''>
-				<input id='messageInput' autocomplete='off' />
-				<input id='nameInput' autocomplete='off' value='A girl has no name'/>
-				<input id='characterNameInput' autocomplete='off' value='Character Name (Waif)'/>
-				<input id='sendMessage' type='submit' value='Send Message'/>
-			</form>
+						<select id='chatrooms'></select>
+					</form>
+				</div>
+
+				<div id='messagesContainer'>
+					<ul id='messages'></ul>
+				</div>
+
+				<form align='center' id='messageForm' action=''>
+					<input id='messageInput' autocomplete='off' />
+					<input id='nameInput' autocomplete='off' value='A girl has no name'/>
+					<select id='characters'></select>
+					<input id='sendMessage' type='submit' value='Send Message'/>
+				</form>
+			</div>
 		</div>
 
 		<script>
@@ -38,18 +68,20 @@
 			socket.on('init', function(data)
 			{
 				$("#chatrooms").val("default").trigger('change');
+				$("#editableCharacters").trigger('change');
+				$('#characters').append("<option value=''>N/A</option>");
 			});
 
 			socket.on('disconnect', function ()
 			{
 				$('#messages').empty();
 				$('#chatrooms').empty();
+				$('#characters').empty();
+				$('#editableCharacters').empty();
 			});
 			
 			socket.on('chat message', function(msg)
 			{
-				console.log("Got a chat");
-
 				$('#messages').append(msg);
 				$('#messagesContainer').scrollTop($('#messages')[0].scrollHeight);
 			});
@@ -64,18 +96,51 @@
 				$('#messages').empty();
 			});
 
+			socket.on('character update', function(character)
+			{
+				$('#characters').append("<option value='" + character.name + "'>" + character.name + ' (' + character.gender + ')' + "</option>");
+				$('#editableCharacters').append("<option value='" + character.name + "'>" + character.name + ' (' + character.gender + ')' + "</option>");
+			});
+
+			socket.on('receive character data', function(character)
+			{
+				$('#characterName').val(character.name);
+				$('#characterGender').val(character.gender);
+				$('#characterSexualRole').val(character.sexRole);
+				$('#characterAppearance').val(character.appearance);
+				$('#characterPersonality').val(character.personality);
+				$('#characterExtraInfo').val(character.extrainfo);
+			});
+
+			$('#clearCharacter').click(function()
+			{
+				$('#characterName').val('');
+				$('#characterGender').val('none');
+				$('#characterSexualRole').val('none');
+				$('#characterAppearance').val('');
+				$('#characterPersonality').val('');
+				$('#characterExtraInfo').val('');
+			});
+
 			$('#chatrooms').change(function()
 			{
 				$( "#chatrooms option:selected" ).each(function()
 				{
-					console.log("changing to room: " + $(this).text())
-					socket.emit('change room', $(this).text());
+					socket.emit('change room', $(this).val());
+			    });				
+			});
+
+			$('#editableCharacters').change(function()
+			{
+				$( "#editableCharacters option:selected" ).each(function()
+				{
+					socket.emit('get character data', $(this).val());
 			    });				
 			});
 
 			$('#messageForm').submit(function()
 			{
-				var characterNameString = '<name>' + $('#characterNameInput').val() + '</name> ';
+				var characterNameString = "<name class='characterNameClass'>" + $('#characters').find(":selected").val() + '</name> ';
 				var nameString = '<name>( ' + $('#nameInput').val() + ' ):</name>  ';
 				var msgString = $('#messageInput').val();
 
@@ -98,6 +163,21 @@
 				socket.emit('new room', roomName);
 				$('#roomName').val('');
 				
+				return false;
+			});
+
+			$('#characterForm').submit(function()
+			{
+				var character = new Object();
+				character.name = $('#characterName').val();
+				character.gender = $('#characterGender').find(":selected").val();
+				character.sexRole = $('#characterSexualRole').find(":selected").val();
+				character.appearance = $('#characterAppearance').val();
+				character.personality = $('#characterPersonality').val();
+				character.extrainfo = $('#characterExtraInfo').val();
+
+				socket.emit('save character', character);
+
 				return false;
 			});
 		</script>

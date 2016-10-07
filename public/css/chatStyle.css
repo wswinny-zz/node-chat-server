@@ -51,6 +51,96 @@ name
 }
 
 /*
+ * MAIN DIV THAT SURROUNDS EVERYTHING
+ */
+
+#centerDiv
+{
+	width: 950px;
+	height: 100%;
+
+	margin: 0 auto;
+}
+
+/*
+ * LEFT CONTENT
+ */
+
+#leftcontent
+{
+	width: 350px;
+	height: 100%;
+
+	float: left;
+}
+
+/*
+ * CHARACTER FORM
+ */
+
+.characterFormInput
+{
+	width: 90%;
+	height: 30px;
+
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;  
+
+	padding: 3px;
+	padding-left: 10px;
+	padding-right: 10px;
+
+	margin-top: 10px;
+
+	background: none;
+
+	font: 13px "Courier New";
+	color: white;
+}
+
+.characterFormTextarea
+{
+	width: 90%;
+	max-width: 90%;
+	min-width: 90%;
+
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;  
+
+	padding: 3px;
+	padding-left: 10px;
+	padding-right: 10px;
+
+	margin-top: 10px;
+
+	background: none;
+
+	font: 13px "Courier New";
+	color: white;
+}
+
+.characterFormSelect
+{
+	width: 90%;
+	height: 30px;
+
+	margin-top: 10px;
+
+	background: none;
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;
+
+	color: white;
+}
+
+.characterFormSelect option
+{
+	background: #262626; /* Fake background transparency */
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;
+}
+
+/*
  * MAIN CONTENT
  */
 
@@ -61,8 +151,6 @@ name
 
 	display: flex;
 	flex-flow: column;
-
-	margin: 0 auto;
 }
 
 /*
@@ -205,8 +293,7 @@ name
 	color: white;
 }
 
-#nameInput,
-#characterNameInput
+#nameInput
 {
 	width: 38%;
 	height: 35px;
@@ -222,6 +309,27 @@ name
 
 	font: 13px "Courier New";
 	color: white;
+}
+
+#characters
+{
+	width: 38%;
+	height: 30px;
+
+	margin-top: 10px;
+
+	background: none;
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;
+
+	color: white;
+}
+
+#characters option
+{
+	background: #262626; /* Fake background transparency */
+	border: 2px solid #e6e6e6;
+	border-radius: 10px;
 }
 
 #sendMessage 
