@@ -64,6 +64,8 @@
 
 		<script>
 			var socket = io();
+			var chatsound = new Audio('sounds/newmessage.mp3');
+			chatsound.volume = 0.3;
 
 			socket.on('init', function(data)
 			{
@@ -84,6 +86,8 @@
 			{
 				$('#messages').append(msg);
 				$('#messagesContainer').scrollTop($('#messages')[0].scrollHeight);
+
+				chatsound.play();
 			});
 
 			socket.on('room update', function(room)
