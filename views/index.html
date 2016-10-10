@@ -54,7 +54,7 @@
 				</div>
 
 				<form align='center' id='messageForm' action=''>
-					<input id='messageInput' autocomplete='off' />
+					<textarea id='messageInput' autocomplete='off' placeholder='Type your message here' required></textarea>
 					<input id='nameInput' autocomplete='off' value='A girl has no name'/>
 					<select id='characters'></select>
 					<input id='sendMessage' type='submit' value='Send Message'/>
@@ -66,6 +66,11 @@
 			var socket = io();
 			var chatsound = new Audio('sounds/newmessage.mp3');
 			chatsound.volume = 0.3;
+
+			function scrollToMessagesBottom()
+			{
+				$('#messagesContainer').scrollTop($('#messages')[0].scrollHeight);
+			}
 
 			socket.on('init', function(data)
 			{
@@ -85,7 +90,7 @@
 			socket.on('chat message', function(msg)
 			{
 				$('#messages').append(msg);
-				$('#messagesContainer').scrollTop($('#messages')[0].scrollHeight);
+				scrollToMessagesBottom();
 
 				chatsound.play();
 			});
@@ -114,6 +119,19 @@
 				$('#characterAppearance').val(character.appearance);
 				$('#characterPersonality').val(character.personality);
 				$('#characterExtraInfo').val(character.extrainfo);
+			});
+
+			$('#messageInput').keyup(function(key)
+			{
+				if(key.keyCode == 13)
+				{
+					$('#messageForm').submit();
+					return;
+				}
+
+				this.style.height = "1px";
+    			this.style.height = (10 + this.scrollHeight) + "px";
+    			scrollToMessagesBottom();
 			});
 
 			$('#clearCharacter').click(function()
@@ -158,7 +176,8 @@
 
 				socket.emit('chat message', chatmessageObj);
 				$('#messageInput').val('');
-				
+				$('#messageInput').keyup();
+
 				return false;
 			});
 
