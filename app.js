@@ -9,9 +9,40 @@ var randomcolor = require('randomcolor');
 var fs = require('fs');
 var dateFormat = require('dateformat');
 
+// GEN RANDOM COLORS EVERY TIME
+// var colors = randomcolor.randomColor({luminosity: 'light',count: 1000});
+
+// WRITE COLORS TO JSON
+// var jsonColors = JSON.stringify(randomcolor.randomColor({luminosity: 'light',count: 1000}));
+// var filename = 'config.json';
+// fs.writeFileSync(filename, jsonColors);
+
+//READ COLORS FROM JSON
+var filename = 'config.json';
+var colorData = fs.readFileSync(filename, 'utf8');
+var colors = JSON.parse(colorData);
+
+
 String.prototype.replaceAll = function(search, replacement)
 {
     return this.replace(new RegExp(search, 'g'), replacement);
+};
+
+String.prototype.hashCode = function() 
+{
+	var hash = 0, i, chr, len;
+
+	if (this.length === 0) 
+		return hash;
+
+	for (i = 0, len = this.length; i < len; i++) 
+	{
+		chr   = this.charCodeAt(i);
+		hash  = ((hash << 5) - hash) + chr;
+		hash |= 0;
+	}
+
+	return Math.abs(hash % colors.length);
 };
 
 function out(message)
@@ -44,11 +75,38 @@ function parseForImage(text)
 			fileExt != '.php' 		&& 
 			fileExt != '.asp')
 		{
-			message = message.replaceAll(entry, "<img src='" + entry + "'/>");
+			message = message.replaceAll(entry, "<img src=\"" + entry + "\"/>");
 		}
 	});
 
 	return message;
+}
+
+function breakWordsOver80Chars(message)
+{
+	var findWordsOver80 = /[^\s]{80,}/g;
+	var wordsOver80Chars = message.match(findWordsOver80);
+	var characterLimit = 65;
+
+	if(wordsOver80Chars == null)
+		return message;
+
+	var newMessage = message;
+
+	wordsOver80Chars.forEach(function(word)
+	{
+		if(word.indexOf("src=\"http") !== -1)
+			return;
+
+		var newWord = "";
+
+		for(var begin = 0, end = characterLimit; end <= word.length; begin = end, end += characterLimit)
+			newWord += word.substring(begin, end) + " ";
+
+		newMessage = newMessage.replace(word, newWord);
+	});
+
+	return newMessage;
 }
 
 //set static path so css and images can be used
@@ -99,12 +157,11 @@ io.on('connection', function(socket)
 	});
 
 	//when a chat message is received from the client
-	socket.on('chat message', function(msg)
+	socket.on('chat message', function(messageObject)
 	{
-		var color = randomcolor.randomColor({luminosity: 'light',count: 1});
+		var newMessage = breakWordsOver80Chars(parseForImage(messageObject.message));
 
-		var newMessage = parseForImage(msg);
-		newMessage = "<li style='color:" + color + ";'>" + newMessage + "</li>";
+		newMessage = "<li style='color:" + colors[messageObject.characterName.hashCode()] + ";'>" + newMessage + "</li>";
 
 		fs.appendFileSync('public/rooms/' + client.room, newMessage + '\n');
 
@@ -133,7 +190,7 @@ io.on('connection', function(socket)
 		var color = randomcolor.randomColor({luminosity: 'light',count: 1});
 		fs.appendFileSync('public/rooms/' + room, "<li style='color:" + color + ";'>Welcome to the " + room + " room</li>\n");
 
-		io.sockets.connected[socket.id].emit('room update', room);
+		io.emit('room update', room);
 
 		out("A new room with the name '" + room + "' was added");
 	});
@@ -146,7 +203,6 @@ io.on('connection', function(socket)
 
 		if (!fs.existsSync(filename))
 		{
-			console.log('New character created:');
 			io.sockets.emit('character update', character);
 		}
 

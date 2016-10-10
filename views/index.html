@@ -13,7 +13,7 @@
 				<form align='center' id='characterForm' action=''>
 					<select id='editableCharacters' class='characterFormSelect'></select>
 
-					<input id='characterName' class='characterFormInput' autocomplete='off' value='' placeholder='Character Name' required>
+					<input id='characterName' class='characterFormInput' autocomplete='off' placeholder='Character Name' required>
 					<select id='characterGender' class='characterFormSelect' required>
 						<option value='none' selected disabled>Select Gender</option>
 						<option value='M'>Male</option>
@@ -147,7 +147,12 @@
 				if(msgString == '')
 					return false;
 
-				socket.emit('chat message', characterNameString + nameString + msgString);
+				var chatmessageObj = new Object();
+				chatmessageObj.message = characterNameString + nameString + msgString;
+				chatmessageObj.name = $('#nameInput').val();
+				chatmessageObj.characterName = $('#characters').find(":selected").val();
+
+				socket.emit('chat message', chatmessageObj);
 				$('#messageInput').val('');
 				
 				return false;
@@ -168,6 +173,9 @@
 
 			$('#characterForm').submit(function()
 			{
+				if($('#characterName').val() == '')
+					return false;
+
 				var character = new Object();
 				character.name = $('#characterName').val();
 				character.gender = $('#characterGender').find(":selected").val();
